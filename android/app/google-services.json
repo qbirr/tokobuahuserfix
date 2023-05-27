@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "298319769322",
+    "project_id": "tokobuah-dc8dc",
+    "storage_bucket": "tokobuah-dc8dc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298319769322:android:f26e49c5773ff3bdabb193",
+        "android_client_info": {
+          "package_name": "com.example.tokobuah"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "298319769322-07mq1audbtck0bftjubs2l858f7k68bu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tokobuah",
+            "certificate_hash": "b48b78ad2282bf96a4428f13deedca722c88130b"
+          }
+        },
+        {
+          "client_id": "298319769322-3abum5i2nfghqh298vb1hq998n74bj8t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhdi434oSidILeXSUshsAWIX_iockiPxI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "298319769322-3abum5i2nfghqh298vb1hq998n74bj8t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
