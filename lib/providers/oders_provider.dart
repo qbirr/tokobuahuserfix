@@ -1,20 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:tokobuah/consts/firebase_auth.dart';
 import '../model/order_model.dart';
 
 class OrdersProvider with ChangeNotifier {
   static List<OrderModel> _orders = [];
+  final User? user = authInstance.currentUser;
   List<OrderModel> get getOrders {
     return _orders;
   }
+
   Future<void> fetchOrders() async {
     await FirebaseFirestore.instance
         .collection('orders')
+        .where('userId', isEqualTo: user!.uid)
+        .orderBy('orderDate', descending: false)
         .get()
         .then((QuerySnapshot ordersSnapshot) {
       _orders = [];
       // _orders.clear();
-      ordersSnapshot.docs.forEach((element) {
+      for (var element in ordersSnapshot.docs) {
         _orders.insert(
           0,
           OrderModel(
@@ -28,7 +34,7 @@ class OrdersProvider with ChangeNotifier {
             orderDate: element.get('orderDate'),
           ),
         );
-      });
+      }
     });
     notifyListeners();
   }

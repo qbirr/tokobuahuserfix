@@ -6,22 +6,22 @@ import 'package:tokobuah/model/cart_model.dart';
 import '../consts/firebase_auth.dart';
 
 class CartProvider with ChangeNotifier {
-  Map<String, CartModel> _cartItems = {};
+  final Map<String, CartModel> _cartItems = {};
 
   Map<String, CartModel> get getCartItems {
     return _cartItems;
   }
 
   ///void addProductToCart({required String productId, required int quantity}) {
-   //// _cartItems.putIfAbsent(
-      ///  productId,
-       /// () => CartModel(
-         ///   id: DateTime.now().toString(),
-          ///  productId: productId,
-           /// quantity: quantity)
-   /// );
-    ///notifyListeners();
- /// }
+  //// _cartItems.putIfAbsent(
+  ///  productId,
+  /// () => CartModel(
+  ///   id: DateTime.now().toString(),
+  ///  productId: productId,
+  /// quantity: quantity)
+  /// );
+  ///notifyListeners();
+  /// }
 
   final userCollection = FirebaseFirestore.instance.collection('users');
   Future<void> fetchCart() async {
@@ -34,37 +34,36 @@ class CartProvider with ChangeNotifier {
     for (int i = 0; i < leng; i++) {
       _cartItems.putIfAbsent(
           userDoc.get('userCart')[i]['productId'],
-              () => CartModel(
-            id: userDoc.get('userCart')[i]['cartId'],
-            productId: userDoc.get('userCart')[i]['productId'],
-            quantity: userDoc.get('userCart')[i]['quantity'],
-          ));
+          () => CartModel(
+                id: userDoc.get('userCart')[i]['cartId'],
+                productId: userDoc.get('userCart')[i]['productId'],
+                quantity: userDoc.get('userCart')[i]['quantity'],
+              ));
     }
     notifyListeners();
   }
-  void reduceQuantityByOne(String productId){
-    _cartItems.update(productId, (value) => CartModel(
-        id: value.id,
-        productId: productId,
-        quantity: value.quantity - 1)
-    );
+
+  void reduceQuantityByOne(String productId) {
+    _cartItems.update(
+        productId,
+        (value) => CartModel(
+            id: value.id, productId: productId, quantity: value.quantity - 1));
     notifyListeners();
   }
 
-  void increaseQuantityByOne(String productId){
-    _cartItems.update(productId, (value) => CartModel(
-        id: value.id,
-        productId: productId,
-        quantity: value.quantity + 1
-    ),
+  void increaseQuantityByOne(String productId) {
+    _cartItems.update(
+      productId,
+      (value) => CartModel(
+          id: value.id, productId: productId, quantity: value.quantity + 1),
     );
     notifyListeners();
   }
 
   Future<void> removeOneItem(
       {required String cartId,
-        required String productId,
-        required int quantity}) async {
+      required String productId,
+      required int quantity}) async {
     final User? user = authInstance.currentUser;
     await userCollection.doc(user!.uid).update({
       'userCart': FieldValue.arrayRemove([
@@ -76,7 +75,6 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-
   Future<void> clearOnlineCart() async {
     final User? user = authInstance.currentUser;
     await userCollection.doc(user!.uid).update({
@@ -86,7 +84,7 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearCart(){
+  void clearCart() {
     _cartItems.clear();
     notifyListeners();
   }
