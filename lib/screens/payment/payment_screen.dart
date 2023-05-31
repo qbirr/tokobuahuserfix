@@ -73,11 +73,17 @@ class PaymentScreen extends StatelessWidget {
                         Navigator.of(context).pop();
                       },
                       child: const Text('Tidak')),
-                  TextButton(onPressed: () {}, child: const Text('Ya')),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Ya')),
                 ],
               ),
             );
-            return Future.value(false);
+            return Future.value(true);
           },
           child: SafeArea(child: WebViewWidget(controller: controller))),
     );

@@ -64,7 +64,7 @@ class CheckoutService {
         print(response.body);
         var data = json.decode(response.body);
         var invoiceUrl = data['invoice_url'];
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
+        Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => PaymentScreen(
               invoiceUrl: invoiceUrl,
               orderId: orderId,
