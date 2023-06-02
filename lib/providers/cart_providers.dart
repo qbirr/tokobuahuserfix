@@ -27,18 +27,20 @@ class CartProvider with ChangeNotifier {
   Future<void> fetchCart() async {
     final User? user = authInstance.currentUser;
     final DocumentSnapshot userDoc = await userCollection.doc(user!.uid).get();
+    print(userDoc.data());
     if (userDoc == null) {
       return;
     }
     final leng = userDoc.get('userCart').length;
     for (int i = 0; i < leng; i++) {
       _cartItems.putIfAbsent(
-          userDoc.get('userCart')[i]['productId'],
-          () => CartModel(
-                id: userDoc.get('userCart')[i]['cartId'],
-                productId: userDoc.get('userCart')[i]['productId'],
-                quantity: userDoc.get('userCart')[i]['quantity'],
-              ));
+        userDoc.get('userCart')[i]['productId'],
+        () => CartModel(
+          id: userDoc.get('userCart')[i]['cartId'],
+          productId: userDoc.get('userCart')[i]['productId'],
+          quantity: userDoc.get('userCart')[i]['quantity'],
+        ),
+      );
     }
     notifyListeners();
   }

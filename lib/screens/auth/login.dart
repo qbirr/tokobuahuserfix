@@ -2,13 +2,13 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:tokobuah/providers/oders_provider.dart';
 import 'package:tokobuah/screens/auth/register.dart';
 import '../../consts/constss.dart';
 import '../../consts/firebase_auth.dart';
 import '../../fetch_screen.dart';
 import '../../services/global_method.dart';
 import '../../widgets/auth_button.dart';
-import '../../widgets/google_button.dart';
 import '../../widgets/text_widget.dart';
 import '../loading_manager.dart';
 import 'forget_password.dart';
@@ -46,14 +46,19 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
       try {
-        await authInstance.signInWithEmailAndPassword(
-            email: _emailTextController.text.toLowerCase().trim(),
-            password: _passTextController.text.trim());
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const FetchScreen(),
-          ),
-        );
+        await authInstance
+            .signInWithEmailAndPassword(
+                email: _emailTextController.text.toLowerCase().trim(),
+                password: _passTextController.text.trim())
+            .then((_) async {
+          OrdersProvider().fetchOrders().then((_) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const FetchScreen(),
+              ),
+            );
+          });
+        });
         print('Succefully logged in');
       } on FirebaseException catch (error) {
         GlobalMethods.errorDialog(
@@ -153,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(
+                          const SizedBox(
                             height: 12,
                           ),
                           //Password
@@ -263,12 +268,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 10,
                   ),
                   AuthButton(
-                    fct: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const FetchScreen(),
-                        ),
-                      );
+                    fct: () async {
+                      await OrdersProvider().fetchOrders().then((_) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const FetchScreen(),
+                          ),
+                        );
+                      });
                     },
                     buttonText: 'Continue as a guest',
                     primary: Colors.black,
@@ -282,19 +289,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: const TextStyle(
                               color: Colors.white, fontSize: 18),
                           children: [
-                            TextSpan(
-                                text: '  Sign up',
-                                style: const TextStyle(
-                                    color: Colors.lightBlue,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    GlobalMethods.navigateTo(
-                                        ctx: context,
-                                        routeName: RegisterScreen.routeName);
-                                  }),
-                          ]))
+                        TextSpan(
+                            text: '  Sign up',
+                            style: const TextStyle(
+                                color: Colors.lightBlue,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                GlobalMethods.navigateTo(
+                                    ctx: context,
+                                    routeName: RegisterScreen.routeName);
+                              }),
+                      ]))
                 ],
               ),
             ),

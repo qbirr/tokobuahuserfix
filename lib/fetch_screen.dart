@@ -7,7 +7,6 @@ import 'package:tokobuah/providers/product_providers.dart';
 import 'package:tokobuah/providers/wishlist_provider.dart';
 import 'package:tokobuah/screens/btm_bar.dart';
 
-
 class FetchScreen extends StatefulWidget {
   const FetchScreen({Key? key}) : super(key: key);
 
@@ -20,18 +19,17 @@ class _FetchScreenState extends State<FetchScreen> {
   void initState() {
     Future.delayed(const Duration(microseconds: 5), () async {
       final productsProvider =
-      Provider.of<ProductsProvider>(context, listen: false);
-      final cartProvider =
-      Provider.of<CartProvider>(context, listen: false);
+          Provider.of<ProductsProvider>(context, listen: false);
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
       final wishlistProvider =
-      Provider.of<WishlistProvider>(context, listen: false);
+          Provider.of<WishlistProvider>(context, listen: false);
       final User? user = authInstance.currentUser;
-      if(user == null){
+      if (user == null) {
         await productsProvider.fetchProducts();
         cartProvider.clearCart();
         wishlistProvider.clearWishlist();
-      }
-      else{
+      } else {
+        cartProvider.clearCart();
         await productsProvider.fetchProducts();
         await cartProvider.fetchCart();
         await wishlistProvider.fetchWishlist();

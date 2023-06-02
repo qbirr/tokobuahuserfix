@@ -32,6 +32,7 @@ class _UserScreenState extends State<UserScreen> {
     _addressTextController.dispose();
     super.dispose();
   }
+
   ///fetch data user
   String? _email;
   String? _name;
@@ -44,39 +45,40 @@ class _UserScreenState extends State<UserScreen> {
     super.initState();
   }
 
-  Future<void> getUserData()async{
+  Future<void> getUserData() async {
     setState(() {
       _isLoading = true;
     });
-    if(user == null){
+    if (user == null) {
       setState(() {
         _isLoading = false;
       });
       return;
     }
-    try{
-      String _uid = user!.uid;
-      final DocumentSnapshot userDoc = await
-        FirebaseFirestore.instance.collection('users').doc(_uid).get();
-      if(userDoc == null){
+    try {
+      String uid = user!.uid;
+      final DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (userDoc == null) {
         return;
-      }else{
+      } else {
         _email = userDoc.get('email');
-        _name =  userDoc.get('name');
+        _name = userDoc.get('name');
         address = userDoc.get('shipping-address');
         _addressTextController.text = userDoc.get('shipping-address');
       }
-    }catch(error){
+    } catch (error) {
       setState(() {
         _isLoading = false;
       });
       GlobalMethods.errorDialog(subtitle: '$error', context: context);
-    }finally{
+    } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
+
   ///
   @override
   Widget build(BuildContext context) {
@@ -84,10 +86,10 @@ class _UserScreenState extends State<UserScreen> {
     final Color color = themeState.getDarkTheme ? Colors.white : Colors.black;
     return Scaffold(
         body: LoadingManager(
-          isLoading : _isLoading,
-          child: Center(
-              child: SingleChildScrollView(
-      child: Padding(
+      isLoading: _isLoading,
+      child: Center(
+          child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,8 +107,10 @@ class _UserScreenState extends State<UserScreen> {
                           fontWeight: FontWeight.bold),
                       children: <TextSpan>[
                     TextSpan(
-                      ///fetch name user
-                        text: _name == null ? 'users' : _name,
+
+                        ///fetch name user
+                        text: _name ?? 'users',
+
                         ///
                         style: TextStyle(
                             color: color,
@@ -125,6 +129,7 @@ class _UserScreenState extends State<UserScreen> {
                 text: _email == null ? 'email' : _email!,
                 color: color,
                 textSize: 18,
+
                 ///
 
                 ///isTile: true,
@@ -164,17 +169,16 @@ class _UserScreenState extends State<UserScreen> {
                   icon: IconlyLight.show,
                   onPressed: () {
                     GlobalMethods.navigateTo(
-                        ctx: context, routeName: ViewedRecentlyScreen.routeName);
+                        ctx: context,
+                        routeName: ViewedRecentlyScreen.routeName);
                   },
                   color: color),
               _listTiles(
                   title: "Lupa Password",
                   icon: IconlyLight.unlock,
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (context) => ForgetPasswordScreen())
-                    );
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const ForgetPasswordScreen()));
                   },
                   color: color),
               SwitchListTile(
@@ -196,8 +200,8 @@ class _UserScreenState extends State<UserScreen> {
                   icon: user == null ? IconlyLight.login : IconlyLight.logout,
                   onPressed: () {
                     if (user == null) {
-                      Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => LoginScreen()));
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const LoginScreen()));
                       return;
                     }
 
@@ -205,19 +209,19 @@ class _UserScreenState extends State<UserScreen> {
                         title: "Sign Out",
                         subtitle: "Apakah anda ingin keluar ?",
                         fct: () async {
-                          await authInstance.signOut();
-                          Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => LoginScreen()));
-                          return;
+                          await authInstance.signOut().then((_) {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => const LoginScreen()));
+                          });
                         },
                         context: context);
                   },
                   color: color),
             ],
           ),
-      ),
-    )),
-        ));
+        ),
+      )),
+    ));
   }
 
   Future<void> _showAddresDialog() async {
@@ -235,18 +239,23 @@ class _UserScreenState extends State<UserScreen> {
               decoration: const InputDecoration(hintText: "Alamat Anda"),
             ),
             actions: [
-              TextButton(onPressed: () async {
-                String _uid = user!.uid;
-                try{
-                  await FirebaseFirestore.instance.collection('users').doc(_uid).update({
-                    'shipping-address' : _addressTextController.text
-
-                  });Navigator.pop(context);
-                }catch(err){
-                  GlobalMethods.errorDialog(
-                      subtitle: err.toString(), context: context);
-                }
-              }, child: const Text("Update"))
+              TextButton(
+                  onPressed: () async {
+                    String uid = user!.uid;
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(uid)
+                          .update({
+                        'shipping-address': _addressTextController.text
+                      });
+                      Navigator.pop(context);
+                    } catch (err) {
+                      GlobalMethods.errorDialog(
+                          subtitle: err.toString(), context: context);
+                    }
+                  },
+                  child: const Text("Update"))
             ],
           );
         });
@@ -268,12 +277,12 @@ Widget _listTiles(
       ///isTile: true,
     ),
     subtitle: TextWidget(
-      text: subtitle == null ? "" : subtitle,
+      text: subtitle ?? "",
       color: color,
       textSize: 18,
     ),
     leading: Icon(icon),
-    trailing: Icon(IconlyLight.arrowRight2),
+    trailing: const Icon(IconlyLight.arrowRight2),
     onTap: () {
       onPressed();
     },
