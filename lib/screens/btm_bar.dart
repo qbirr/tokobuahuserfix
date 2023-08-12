@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
-import 'package:provider/provider.dart';
-import 'package:tokobuah/providers/cart_providers.dart';
+import 'package:get/get.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/screens/categories.dart';
 import 'package:tokobuah/screens/home_screen.dart';
 import 'package:tokobuah/screens/user.dart';
@@ -20,10 +20,10 @@ class BottomBarScreen extends StatefulWidget {
 class _BottomBarScreenState extends State<BottomBarScreen> {
   int _selectedIndex = 0;
   final List<Map<String, dynamic>> _pages = [
-    {"page": HomeScreen(), 'title': "Home Screen"},
+    {"page": const HomeScreen(), 'title': "Home Screen"},
     {"page": CategoriesScreen(), 'title': "Category Screen"},
-    {"page": CartScreen(), 'title': "Cart Screen"},
-    {"page": UserScreen(), 'title': "User Screen"}
+    {"page": const CartScreen(), 'title': "Cart Screen"},
+    {"page": const UserScreen(), 'title': "User Screen"}
   ];
 
   void _selectedPage(int index) {
@@ -51,31 +51,27 @@ class _BottomBarScreenState extends State<BottomBarScreen> {
                   _selectedIndex == 0 ? IconlyBold.home : IconlyLight.home),
               label: "Home"),
           BottomNavigationBarItem(
-              icon: Icon(_selectedIndex == 1
-                  ? IconlyBold.category
-                  : IconlyLight.category),
+            icon: Icon(_selectedIndex == 1
+                ? IconlyBold.category
+                : IconlyLight.category),
             label: "Categories",
           ),
           BottomNavigationBarItem(
-              icon: Consumer<CartProvider>(
-                builder: (_, myCart, ch) {
-                  return badges.Badge(
-                      badgeAnimation: const badges.BadgeAnimation.slide(),
-                      badgeStyle: badges.BadgeStyle(
-                          shape: badges.BadgeShape.circle,
-                          badgeColor: Colors.blue,
-                          borderRadius: BorderRadius.circular(8)),
-                      position: badges.BadgePosition.topEnd(top: -7, end: -7),
-                      badgeContent: FittedBox(
-                        child: TextWidget(
-                            text: myCart.getCartItems.length.toString(),
-                            color: Colors.white, textSize: 15),
-                      ),
-                      child: Icon(_selectedIndex == 1
-                          ? IconlyBold.buy
-                          : IconlyLight.buy));
-                }
-              ),
+              icon: badges.Badge(
+                  badgeAnimation: const badges.BadgeAnimation.slide(),
+                  badgeStyle: badges.BadgeStyle(
+                      shape: badges.BadgeShape.circle,
+                      badgeColor: Colors.blue,
+                      borderRadius: BorderRadius.circular(8)),
+                  position: badges.BadgePosition.topEnd(top: -7, end: -7),
+                  badgeContent: FittedBox(
+                    child: Obx(() => TextWidget(
+                        text: Get.find<CartController>().totalItems.toString(),
+                        color: Colors.white,
+                        textSize: 15)),
+                  ),
+                  child: Icon(
+                      _selectedIndex == 1 ? IconlyBold.buy : IconlyLight.buy)),
               label: "Cart"),
           BottomNavigationBarItem(
               icon: Icon(

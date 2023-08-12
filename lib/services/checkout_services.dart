@@ -5,11 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:tokobuah/consts/firebase_auth.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/fetch_screen.dart';
-import 'package:tokobuah/model/cart_model.dart';
-import 'package:tokobuah/providers/cart_providers.dart';
+import 'package:tokobuah/model/cart_item.dart';
 import 'package:tokobuah/providers/oders_provider.dart';
 import 'package:tokobuah/providers/product_providers.dart';
 import 'package:http/http.dart' as http;
@@ -24,7 +25,7 @@ class CheckoutService {
     double totalPayment,
     List<String> paymentMethod,
     String payment,
-    Map<String, CartModel> cart,
+    RxList<CartItem> cart,
     String orderId,
     BuildContext context,
   ) async {
@@ -33,14 +34,14 @@ class CheckoutService {
     );
     List<Map<String, dynamic>> dataProducts = [];
     dataProducts.clear();
-    cart.forEach((key, cartData) {
-      final product = ProductsProvider().findProdById(cartData.productId);
+    for (var cartItem in Get.find<CartController>().cartItems) {
+      final product = ProductsProvider().findProdById(cartItem.productId);
       dataProducts.add({
         'name': product.title,
-        'quantity': cartData.quantity,
+        'quantity': cartItem.quantity,
         'price': product.isOnSale ? product.salePrice : product.price
       });
-    });
+    }
     try {
       var invoiceID = "inv-$orderId";
       var response = await http.post(
@@ -97,15 +98,14 @@ class CheckoutService {
     EasyLoading.show(
       maskType: EasyLoadingMaskType.black,
     );
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final productProvider =
         Provider.of<ProductsProvider>(context, listen: false);
     final ordersProvider = Provider.of<OrdersProvider>(context, listen: false);
-    cartProvider.getCartItems.forEach(
-      (key, value) async {
+    Get.find<CartController>().cartItems.forEach(
+      (cartItem) async {
         log('onPaymentSuccess dieksekusi');
         final getCurrProduct = productProvider.findProdById(
-          value.productId,
+          cartItem.productId,
         );
         try {
           await FirebaseFirestore.instance
@@ -115,21 +115,20 @@ class CheckoutService {
             {
               'orderId': orderId,
               'userId': user!.uid,
-              'productId': value.productId,
+              'productId': cartItem.productId,
               'price': (getCurrProduct.isOnSale
                       ? getCurrProduct.salePrice
                       : getCurrProduct.price) *
-                  value.quantity,
+                  cartItem.quantity,
               'totalPrice': total,
-              'quantity': value.quantity,
+              'quantity': cartItem.quantity,
               'metodePembayaran': paymentMethod,
               'imageUrl': getCurrProduct.imageUrl,
               'userName': user!.displayName,
               'orderDate': Timestamp.now(),
             },
           ).then((_) async {
-            cartProvider.clearOnlineCart();
-            cartProvider.clearCart();
+            Get.find<CartController>().clearOnlineCart();
             ordersProvider.fetchOrders();
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(

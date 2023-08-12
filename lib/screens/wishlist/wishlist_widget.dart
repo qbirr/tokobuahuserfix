@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tokobuah/inner_screen/product_details.dart';
-import 'package:tokobuah/services/global_method.dart';
 import 'package:tokobuah/services/utils.dart';
 import 'package:tokobuah/widgets/heart_btn.dart';
 import 'package:tokobuah/widgets/text_widget.dart';
@@ -21,12 +21,12 @@ class WishlistWidget extends StatelessWidget {
     final wishlistModel = Provider.of<WishlistModel>(context);
     final wishlistProvider = Provider.of<WishlistProvider>(context);
     final getCurrProduct =
-    productProvider.findProdById(wishlistModel.productId);
+        productProvider.findProdById(wishlistModel.productId);
     double usedPrice = getCurrProduct.isOnSale
         ? getCurrProduct.salePrice
         : getCurrProduct.price;
-    bool? _isInWishlist =
-    wishlistProvider.getWishlistItems.containsKey(getCurrProduct.id);
+    bool? isInWishlist =
+        wishlistProvider.getWishlistItems.containsKey(getCurrProduct.id);
     final Color color = Utils(context).color;
     Size size = Utils(context).screenSize;
     return Padding(
@@ -47,13 +47,31 @@ class WishlistWidget extends StatelessWidget {
             children: [
               Flexible(
                 flex: 2,
-                child: Container(
-                  margin: const EdgeInsets.only(left: 8),
-                  // width: size.width * 0.2,
-                  height: size.width * 0.25,
-                  child: Image.network(
-                   getCurrProduct.imageUrl,
-                    fit: BoxFit.fill,
+                child: CachedNetworkImage(
+                  imageUrl: getCurrProduct.imageUrl,
+                  imageBuilder: (context, imageProvider) {
+                    return Container(
+                      height: size.width * 0.25,
+                      width: size.width * 0.25,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  },
+                  placeholder: (context, url) => Container(
+                    height: size.width * 0.25,
+                    width: size.width * 0.25,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/placeholder.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -75,7 +93,7 @@ class WishlistWidget extends StatelessWidget {
                           ),
                           HeartButton(
                             productId: getCurrProduct.id,
-                            isInWishlist: _isInWishlist,
+                            isInWishlist: isInWishlist,
                           )
                         ],
                       ),
@@ -91,7 +109,11 @@ class WishlistWidget extends StatelessWidget {
                       height: 5,
                     ),
                     TextWidget(
-                      text: '\$${usedPrice.toStringAsFixed(2)}',
+                      text: NumberFormat.currency(
+                        locale: 'id-ID',
+                        name: '',
+                        decimalDigits: 0,
+                      ).format(usedPrice),
                       color: color,
                       textSize: 18.0,
                       maxLines: 1,
@@ -107,4 +129,3 @@ class WishlistWidget extends StatelessWidget {
     );
   }
 }
-

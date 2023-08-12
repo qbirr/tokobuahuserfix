@@ -1,8 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:tokobuah/consts/firebase_auth.dart';
-import 'package:tokobuah/providers/cart_providers.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/providers/product_providers.dart';
 import 'package:tokobuah/providers/wishlist_provider.dart';
 import 'package:tokobuah/screens/btm_bar.dart';
@@ -20,23 +21,25 @@ class _FetchScreenState extends State<FetchScreen> {
     Future.delayed(const Duration(microseconds: 5), () async {
       final productsProvider =
           Provider.of<ProductsProvider>(context, listen: false);
-      final cartProvider = Provider.of<CartProvider>(context, listen: false);
       final wishlistProvider =
           Provider.of<WishlistProvider>(context, listen: false);
       final User? user = authInstance.currentUser;
       if (user == null) {
-        await productsProvider.fetchProducts();
-        cartProvider.clearCart();
-        wishlistProvider.clearWishlist();
+        Get.find<CartController>().clearCart();
+        await productsProvider.fetchProducts().then((value) {
+          wishlistProvider.clearWishlist();
+          Get.offAll(() => const BottomBarScreen());
+        });
       } else {
-        cartProvider.clearCart();
-        await productsProvider.fetchProducts();
-        await cartProvider.fetchCart();
-        await wishlistProvider.fetchWishlist();
+        Get.find<CartController>().clearCart();
+        await productsProvider.fetchProducts().then((_) async {
+          await Get.find<CartController>().fetchCart().then((_) async {
+            await wishlistProvider.fetchWishlist().then((_) {
+              Get.offAll(() => const BottomBarScreen());
+            });
+          });
+        });
       }
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (ctx) => const BottomBarScreen(),
-      ));
     });
     super.initState();
   }

@@ -1,14 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:tokobuah/consts/theme_data.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/fetch_screen.dart';
 import 'package:tokobuah/inner_screen/feeds_screen.dart';
 import 'package:tokobuah/inner_screen/on_sale_screen.dart';
 import 'package:tokobuah/inner_screen/product_details.dart';
 import 'package:tokobuah/provider/dark_theme_provider.dart';
-import 'package:tokobuah/providers/cart_providers.dart';
 import 'package:tokobuah/providers/oders_provider.dart';
 import 'package:tokobuah/providers/product_providers.dart';
 import 'package:tokobuah/providers/viewed_providers.dart';
@@ -22,7 +23,10 @@ import 'package:tokobuah/screens/wishlist/wishlist_screen.dart';
 
 import 'inner_screen/cat_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  Get.put(CartController(), permanent: true);
   runApp(const MyApp());
 }
 
@@ -77,7 +81,6 @@ class _MyAppState extends State<MyApp> {
                   return themeChangeProvider;
                 }),
                 ChangeNotifierProvider(create: (_) => ProductsProvider()),
-                ChangeNotifierProvider(create: (_) => CartProvider()),
                 ChangeNotifierProvider(create: (_) => WishlistProvider()),
                 ChangeNotifierProvider(create: (_) => ViewedProdProvider()),
                 ChangeNotifierProvider(
@@ -86,7 +89,7 @@ class _MyAppState extends State<MyApp> {
               ],
               child: Consumer<DarkThemeProvider>(
                   builder: (context, themeProvider, child) {
-                return MaterialApp(
+                return GetMaterialApp(
                   debugShowCheckedModeBanner: false,
                   title: 'Flutter Demo',
                   theme: Styles.themeData(themeProvider.getDarkTheme, context),

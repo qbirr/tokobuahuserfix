@@ -1,5 +1,6 @@
-import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../inner_screen/product_details.dart';
 import '../../model/order_model.dart';
@@ -34,16 +35,39 @@ class _OrderWidgetState extends State<OrderWidget> {
     final productProvider = Provider.of<ProductsProvider>(context);
     final getCurrProduct = productProvider.findProdById(ordersModel.productId);
     return ListTile(
-      subtitle:
-      Text('Paid: \Rp${double.parse(ordersModel.price).toStringAsFixed(0)}'),
+      subtitle: Text('Paid: ${NumberFormat.currency(
+        locale: 'id-ID',
+        name: 'Rp ',
+        decimalDigits: 0,
+      ).format(double.parse(ordersModel.price))} '),
       onTap: () {
         GlobalMethods.navigateTo(
             ctx: context, routeName: ProductDetails.routeName);
       },
-      leading: FancyShimmerImage(
-        width: size.width * 0.2,
+      leading: CachedNetworkImage(
         imageUrl: getCurrProduct.imageUrl,
-        boxFit: BoxFit.fill,
+        imageBuilder: (context, imageProvider) {
+          return Container(
+            width: size.width * 0.2,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              image: DecorationImage(
+                image: imageProvider,
+                fit: BoxFit.fitHeight,
+              ),
+            ),
+          );
+        },
+        placeholder: (context, url) => Container(
+          width: size.width * 0.2,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            image: const DecorationImage(
+              image: AssetImage('assets/images/placeholder.png'),
+              fit: BoxFit.fitHeight,
+            ),
+          ),
+        ),
       ),
       title: TextWidget(
           text: '${getCurrProduct.title}  x${ordersModel.quantity}',

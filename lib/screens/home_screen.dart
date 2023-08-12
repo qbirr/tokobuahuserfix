@@ -1,10 +1,8 @@
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tokobuah/consts/constss.dart';
 import 'package:tokobuah/inner_screen/feeds_screen.dart';
 import 'package:tokobuah/inner_screen/on_sale_screen.dart';
-import 'package:tokobuah/provider/dark_theme_provider.dart';
 import 'package:tokobuah/services/global_method.dart';
 import 'package:tokobuah/services/utils.dart';
 import 'package:tokobuah/widgets/feed_items.dart';
@@ -22,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   final List<String> _offerImages = [
     "assets/images/offres/Offer1.jpg",
     "assets/images/offres/Offer2.jpg",
@@ -40,43 +37,54 @@ class _HomeScreenState extends State<HomeScreen> {
     List<ProductModel> allProduct = productProviders.getProduct;
     List<ProductModel> productOnSale = productProviders.getOnSaleProduct;
 
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
             SizedBox(
-              height: size.height * 0.35,
-              child: Swiper(
-                autoplay: true,
-                itemBuilder: (BuildContext context, int index){
-                  return Image.asset(_offerImages[index], fit: BoxFit.fill,);
-                },
-                itemCount: _offerImages.length,
-                pagination: SwiperPagination(
-                  alignment: Alignment.bottomCenter,
-                  builder: DotSwiperPaginationBuilder(color: Colors.white, activeColor: Colors.red)
-                ),
-              )
-            ),
+                height: size.height * 0.35,
+                child: Swiper(
+                  autoplay: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Image.asset(_offerImages[index], fit: BoxFit.fill,
+                        frameBuilder: (BuildContext context, Widget child,
+                            int? frame, bool wasSynchronouslyLoaded) {
+                      if (wasSynchronouslyLoaded) {
+                        return child;
+                      }
+                      return AnimatedOpacity(
+                        opacity: frame == null ? 0 : 1,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOutBack,
+                        child: child,
+                      );
+                    });
+                  },
+                  itemCount: _offerImages.length,
+                  pagination: const SwiperPagination(
+                      alignment: Alignment.bottomCenter,
+                      builder: DotSwiperPaginationBuilder(
+                          color: Colors.white, activeColor: Colors.red)),
+                )),
             const SizedBox(
               height: 6,
             ),
-            TextButton(onPressed: (){
-              GlobalMethods.navigateTo(ctx: context, routeName: OnSaleScreen.routeName);
-            },
+            TextButton(
+                onPressed: () {
+                  GlobalMethods.navigateTo(
+                      ctx: context, routeName: OnSaleScreen.routeName);
+                },
                 child: TextWidget(
                   text: 'Lihat Semua',
                   maxLines: 1,
                   color: Colors.blue,
                   textSize: 20,
-                )
-            ),const SizedBox(
+                )),
+            const SizedBox(
               height: 6,
             ),
             Row(
               children: [
-
                 Flexible(
                   child: SizedBox(
                     height: size.height * 0.24,
@@ -94,46 +102,48 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(
+              height: 10,
+            ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextWidget(text: "Produk Kami", color: color, textSize: 22, isTile: true,),
-                  Spacer(),
-                  TextButton(onPressed: (){
-                    GlobalMethods.navigateTo(ctx: context, routeName: FeedsScreen.routeName);
-                  },
+                  TextWidget(
+                    text: "Produk Kami",
+                    color: color,
+                    textSize: 22,
+                    isTile: true,
+                  ),
+                  const Spacer(),
+                  TextButton(
+                      onPressed: () {
+                        GlobalMethods.navigateTo(
+                            ctx: context, routeName: FeedsScreen.routeName);
+                      },
                       child: TextWidget(
                         text: 'Cari Semua',
                         maxLines: 1,
                         color: Colors.blue,
                         textSize: 20,
-                      )
-                  ),
+                      )),
                 ],
               ),
             ),
             GridView.count(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
-            childAspectRatio: size.width / (size.height * 0.69),
-              children: 
-                List.generate(
-                    allProduct.length < 4
-                    ? allProduct.length
-                      : 4,(index){
+                childAspectRatio: size.width / (size.height * 0.69),
+                children: List.generate(
+                    allProduct.length < 4 ? allProduct.length : 4, (index) {
                   return ChangeNotifierProvider.value(
                     value: allProduct[index],
-                    child: const FeedsWidgets(
-                    ),
+                    child: const FeedsWidgets(),
                   );
-                })
-            ),
-            
+                })),
           ],
         ),
       ),

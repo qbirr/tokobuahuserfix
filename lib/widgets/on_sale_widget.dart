@@ -1,22 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/providers/wishlist_provider.dart';
 import 'package:tokobuah/services/utils.dart';
 import 'package:tokobuah/widgets/heart_btn.dart';
 import 'package:tokobuah/widgets/price_widget.dart';
 import 'package:tokobuah/widgets/text_widget.dart';
 
-import '../consts/firebase_auth.dart';
 import '../inner_screen/product_details.dart';
 import '../model/model_product.dart';
-import '../providers/cart_providers.dart';
 import '../providers/viewed_providers.dart';
-import '../providers/wishlist_provider.dart';
-import '../providers/wishlist_provider.dart';
-import '../services/global_method.dart';
+
 class OnSaleWidget extends StatefulWidget {
   const OnSaleWidget({Key? key}) : super(key: key);
 
@@ -31,10 +28,13 @@ class _OnSaleWidgetState extends State<OnSaleWidget> {
     final Color color = Utils(context).color;
     final theme = Utils(context).getTheme;
     Size size = Utils(context).screenSize;
-    final cartProvider = Provider.of<CartProvider>(context);
-    bool? _isInCart = cartProvider.getCartItems.containsKey(productModel.id);
+    bool? isInCart = Get.find<CartController>()
+        .cartItems
+        .toString()
+        .contains(productModel.id);
     final wishlistProvider = Provider.of<WishlistProvider>(context);
-    bool? _isInWishlist = wishlistProvider.getWishlistItems.containsKey(productModel.id);
+    bool? isInWishlist =
+        wishlistProvider.getWishlistItems.containsKey(productModel.id);
     final viewedProdProvider = Provider.of<ViewedProdProvider>(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -43,9 +43,10 @@ class _OnSaleWidgetState extends State<OnSaleWidget> {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: (){
+          onTap: () {
             viewedProdProvider.addProductToHistory(productId: productModel.id);
-            Navigator.pushNamed(context, ProductDetails.routeName, arguments: productModel.id);
+            Navigator.pushNamed(context, ProductDetails.routeName,
+                arguments: productModel.id);
           },
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -55,15 +56,37 @@ class _OnSaleWidgetState extends State<OnSaleWidget> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.network(
-                        productModel.imageUrl,
-                    height: size.width * 0.19,
-                    fit: BoxFit.fill,
+                    CachedNetworkImage(
+                      imageUrl: productModel.imageUrl,
+                      imageBuilder: (context, imageProvider) {
+                        return Container(
+                          height: size.width * 0.19,
+                          width: size.width * 0.19,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      },
+                      placeholder: (context, url) => Container(
+                        height: size.width * 0.19,
+                        width: size.width * 0.19,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/placeholder.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
                     ),
                     Column(
                       children: [
                         TextWidget(
-                          text : productModel.isPiece ? "1piece" : "1kg",
+                          text: productModel.isPiece ? "1piece" : "1kg",
                           color: color,
                           textSize: 12,
                           isTile: true,
@@ -71,43 +94,43 @@ class _OnSaleWidgetState extends State<OnSaleWidget> {
                         const SizedBox(
                           height: 6,
                         ),
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: _isInCart
-                                  ? null
-                                  : () async {
-                                final User? user =
-                                    authInstance.currentUser;
+                        Row(children: [
+                          GestureDetector(
+                            onTap: isInCart
+                                ? null
+                                : () async {
+                                    Get.find<CartController>().addProductToCart(
+                                        productId: productModel.id,
+                                        price: productModel.isOnSale
+                                            ? productModel.salePrice
+                                            : productModel.price,
+                                        quantity: 1,
+                                        context: context);
+                                    // final User? user = authInstance.currentUser;
 
-                                if (user == null) {
-                                  GlobalMethods.errorDialog(
-                                      subtitle:
-                                      'No user found, Please login first',
-                                      context: context);
-                                  return;
-                                }
-                                await GlobalMethods.addToCart(
-                                    productId: productModel.id,
-                                    quantity: 1,
-                                    context: context);
-                                await cartProvider.fetchCart();
-                                // cartProvider.addProductsToCart(
-                                //     productId: productModel.id,
-                                //     quantity: 1);
-                              },
-                              child: Icon(
-                                _isInCart ? IconlyBold.bag2 : IconlyLight.bag2,
+                                    // if (user == null) {
+                                    //   GlobalMethods.errorDialog(
+                                    //       subtitle:
+                                    //           'No user found, Please login first',
+                                    //       context: context);
+                                    //   return;
+                                    // }
+                                    // await GlobalMethods.addToCart(
+                                    //     productId: productModel.id,
+                                    //     quantity: 1,
+                                    //     context: context);
+                                    // await cartProvider.fetchCart();
+                                  },
+                            child: Icon(
+                              isInCart ? IconlyBold.bag2 : IconlyLight.bag2,
                               size: 17,
-                              color: _isInCart ? Colors.green : color,),
+                              color: isInCart ? Colors.green : color,
                             ),
-                            HeartButton(
+                          ),
+                          HeartButton(
                               productId: productModel.id,
-                              isInWishlist : _isInWishlist
-                            )
-                          ]
-                        ),
-
+                              isInWishlist: isInWishlist)
+                        ]),
                       ],
                     )
                   ],
@@ -121,10 +144,7 @@ class _OnSaleWidgetState extends State<OnSaleWidget> {
                 const SizedBox(
                   height: 5,
                 ),
-                TextWidget(
-                    text: productModel.title,
-                    color: color,
-                    textSize: 16)
+                TextWidget(text: productModel.title, color: color, textSize: 16)
               ],
             ),
           ),

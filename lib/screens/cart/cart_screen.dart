@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/services/checkout_services.dart';
 import 'package:uuid/uuid.dart';
 import '../../consts/firebase_auth.dart';
-import '../../providers/cart_providers.dart';
 import '../../providers/oders_provider.dart';
 import '../../providers/product_providers.dart';
 import '../../services/global_method.dart';
@@ -21,79 +23,81 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color color = Utils(context).color;
     Size size = Utils(context).screenSize;
-    final cartProvider = Provider.of<CartProvider>(context);
-    final cartItemsList =
-        cartProvider.getCartItems.values.toList().reversed.toList();
-    return cartItemsList.isEmpty
-        ? const EmptyScreen(
-            title: 'Your cart is empty',
-            subtitle: 'Add something and make me happy :)',
-            buttonText: 'Shop now',
-            imagePath: 'assets/images/cart.png',
-          )
-        : Scaffold(
-            appBar: AppBar(
-                automaticallyImplyLeading: false,
-                elevation: 0,
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                title: TextWidget(
-                  text: 'Cart (${cartItemsList.length})',
-                  color: color,
-                  isTile: true,
-                  textSize: 22,
-                ),
-                actions: [
-                  IconButton(
-                    onPressed: () {
-                      GlobalMethods.warningDialog(
-                          title: 'Empty your cart?',
-                          subtitle: 'Are you sure?',
-                          fct: () async {
-                            await cartProvider.clearOnlineCart();
-                            cartProvider.clearCart();
-                          },
-                          context: context);
-                    },
-                    icon: Icon(
-                      IconlyBroken.delete,
+    final cartItemsList = Get.find<CartController>().cartItems;
+    return GetBuilder<CartController>(
+      builder: (controller) {
+        return cartItemsList.isEmpty
+            ? const EmptyScreen(
+                title: 'Your cart is empty',
+                subtitle: 'Add something and make me happy :)',
+                buttonText: 'Shop now',
+                imagePath: 'assets/images/cart.png',
+              )
+            : Scaffold(
+                appBar: AppBar(
+                    automaticallyImplyLeading: false,
+                    elevation: 0,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    title: TextWidget(
+                      text: 'Cart (${cartItemsList.length})',
                       color: color,
+                      isTile: true,
+                      textSize: 22,
                     ),
-                  ),
-                ]),
-            body: Column(
-              children: [
-                _checkout(ctx: context),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: cartItemsList.length,
-                    itemBuilder: (ctx, index) {
-                      return ChangeNotifierProvider.value(
-                          value: cartItemsList[index],
-                          child: CartWidget(
-                            q: cartItemsList[index].quantity,
-                          ));
-                    },
-                  ),
+                    actions: [
+                      IconButton(
+                        onPressed: () {
+                          GlobalMethods.warningDialog(
+                              title: 'Empty your cart?',
+                              subtitle: 'Are you sure?',
+                              fct: () async {
+                                await Get.find<CartController>()
+                                    .clearOnlineCart();
+                              },
+                              context: context);
+                        },
+                        icon: Icon(
+                          IconlyBroken.delete,
+                          color: color,
+                        ),
+                      ),
+                    ]),
+                body: Column(
+                  children: [
+                    _checkout(ctx: context),
+                    Expanded(
+                      child: Obx(
+                        () => ListView.builder(
+                          itemCount: cartItemsList.length,
+                          itemBuilder: (ctx, index) {
+                            return CartWidget(
+                              q: cartItemsList[index].quantity,
+                              cartItem: cartItemsList[index],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
+              );
+      },
+    );
   }
 
   Widget _checkout({required BuildContext ctx}) {
     final Color color = Utils(ctx).color;
     Size size = Utils(ctx).screenSize;
-    final cartProvider = Provider.of<CartProvider>(ctx);
     final productProvider = Provider.of<ProductsProvider>(ctx);
     final ordersProvider = Provider.of<OrdersProvider>(ctx);
     double total = 0.0;
-    cartProvider.getCartItems.forEach((key, value) {
-      final getCurrProduct = productProvider.findProdById(value.productId);
+    for (var cartItem in Get.find<CartController>().cartItems) {
+      final getCurrProduct = productProvider.findProdById(cartItem.productId);
       total += (getCurrProduct.isOnSale
               ? getCurrProduct.salePrice
               : getCurrProduct.price) *
-          value.quantity;
-    });
+          cartItem.quantity;
+    }
     List<String> paymentMethod = [];
     String payment = '';
 
@@ -168,10 +172,14 @@ class CartScreen extends StatelessWidget {
                           onTap: () {
                             getPaymentMethod(0);
                             CheckoutService().payOrder(
-                                total,
+                                Get.find<CartController>().discount > 0
+                                    ? Get.find<CartController>()
+                                        .grandTotal
+                                        .value
+                                    : total,
                                 paymentMethod,
                                 payment,
-                                cartProvider.getCartItems,
+                                Get.find<CartController>().cartItems,
                                 orderId,
                                 context);
                           },
@@ -194,10 +202,14 @@ class CartScreen extends StatelessWidget {
                           onTap: () {
                             getPaymentMethod(1);
                             CheckoutService().payOrder(
-                                total,
+                                Get.find<CartController>().discount > 0
+                                    ? Get.find<CartController>()
+                                        .grandTotal
+                                        .value
+                                    : total,
                                 paymentMethod,
                                 payment,
-                                cartProvider.getCartItems,
+                                Get.find<CartController>().cartItems,
                                 orderId,
                                 context);
                           },
@@ -220,10 +232,14 @@ class CartScreen extends StatelessWidget {
                           onTap: () {
                             getPaymentMethod(2);
                             CheckoutService().payOrder(
-                                total,
+                                Get.find<CartController>().discount > 0
+                                    ? Get.find<CartController>()
+                                        .grandTotal
+                                        .value
+                                    : total,
                                 paymentMethod,
                                 payment,
-                                cartProvider.getCartItems,
+                                Get.find<CartController>().cartItems,
                                 orderId,
                                 context);
                           },
@@ -350,14 +366,69 @@ class CartScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          FittedBox(
-            child: TextWidget(
-              text: 'Total: Rp${total.toStringAsFixed(2)}',
-              color: color,
-              textSize: 18,
-              isTile: true,
-            ),
-          ),
+          GetBuilder<CartController>(builder: (controller) {
+            return FittedBox(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    children: [
+                      TextWidget(
+                        text: 'Total: ',
+                        color: color,
+                        textSize: 18,
+                        isTile: true,
+                      ),
+                      TextWidget(
+                        text: NumberFormat.currency(
+                          locale: 'id-ID',
+                          name: 'Rp ',
+                          decimalDigits: 0,
+                        ).format(Get.find<CartController>().totalAmount.value),
+                        color: color,
+                        textSize: 18,
+                        isTile: true,
+                        decoration: controller.discount > 0
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
+                      controller.discount > 0
+                          ? Row(
+                              children: [
+                                const SizedBox(
+                                  width: 6,
+                                ),
+                                TextWidget(
+                                  text: NumberFormat.currency(
+                                    locale: 'id-ID',
+                                    name: '',
+                                    decimalDigits: 0,
+                                  ).format(Get.find<CartController>()
+                                      .grandTotal
+                                      .value),
+                                  color: color,
+                                  textSize: 18,
+                                  isTile: true,
+                                ),
+                              ],
+                            )
+                          : const SizedBox(),
+                    ],
+                  ),
+                  controller.discount > 0
+                      ? TextWidget(
+                          text:
+                              'Anda mendapatkan diskon sebesar ${controller.discount}% !',
+                          color: color,
+                          textSize: 14,
+                          isTile: false,
+                        )
+                      : const SizedBox(),
+                ],
+              ),
+            );
+          }),
         ]),
       ),
     );

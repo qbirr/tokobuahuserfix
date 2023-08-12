@@ -1,7 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'package:provider/provider.dart';
 import 'package:tokobuah/consts/firebase_auth.dart';
@@ -89,17 +90,46 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
                     child: ListTile(
-                      subtitle: Text(
-                          'Paid: Rp${double.parse(orderData.price).toStringAsFixed(0)}'),
+                      subtitle: Text('Paid: ${NumberFormat.currency(
+                        locale: 'id-ID',
+                        name: 'Rp ',
+                        decimalDigits: 0,
+                      ).format(double.parse(orderData.price))}'),
                       onTap: () {
                         GlobalMethods.navigateTo(
                             ctx: context, routeName: ProductDetails.routeName);
                       },
-                      leading: FancyShimmerImage(
-                        width: size.width * 0.2,
+                      leading: CachedNetworkImage(
                         imageUrl: orderData.imageUrl,
-                        boxFit: BoxFit.fill,
+                        imageBuilder: (context, imageProvider) {
+                          return Container(
+                            width: size.width * 0.2,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.fitHeight,
+                              ),
+                            ),
+                          );
+                        },
+                        placeholder: (context, url) => Container(
+                          width: size.width * 0.2,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: const DecorationImage(
+                              image:
+                                  AssetImage('assets/images/placeholder.png'),
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                        ),
                       ),
+                      // leading: FancyShimmerImage(
+                      //   width: size.width * 0.2,
+                      //   imageUrl: orderData.imageUrl,
+                      //   boxFit: BoxFit.fill,
+                      // ),
                       title: TextWidget(
                           text:
                               '${productProvider.findProdById(orderData.productId).title}  x${orderData.quantity}',

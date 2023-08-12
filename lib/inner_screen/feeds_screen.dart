@@ -1,15 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:tokobuah/consts/firebase_auth.dart';
+import 'package:tokobuah/controllers/cart_controller.dart';
 import 'package:tokobuah/inner_screen/product_details.dart';
 import 'package:tokobuah/model/model_product.dart';
-import 'package:tokobuah/providers/cart_providers.dart';
 import 'package:tokobuah/providers/product_providers.dart';
 import 'package:tokobuah/providers/viewed_providers.dart';
 import 'package:tokobuah/providers/wishlist_provider.dart';
-import 'package:tokobuah/services/global_method.dart';
 import 'package:tokobuah/widgets/back_widget.dart';
 import 'package:tokobuah/widgets/heart_btn.dart';
 import 'package:tokobuah/widgets/price_widget.dart';
@@ -53,7 +52,6 @@ class _FeedsScreenState extends State<FeedsScreen> {
     List<ProductModel> allProduct = productProviders.getProduct;
     final viewedProdProvider = Provider.of<ViewedProdProvider>(context);
     final wishlistProvider = Provider.of<WishlistProvider>(context);
-    final cartProvider = Provider.of<CartProvider>(context);
     return Listener(
       onPointerDown: (_) {
         FocusScopeNode currentFocus = FocusScope.of(context);
@@ -156,13 +154,36 @@ class _FeedsScreenState extends State<FeedsScreen> {
                               borderRadius: BorderRadius.circular(12),
                               child: Column(
                                 children: [
-                                  Image.network(
-                                    _isSearching
+                                  CachedNetworkImage(
+                                    imageUrl: _isSearching
                                         ? searchResults[index].imageUrl
                                         : allProduct[index].imageUrl,
-                                    height: size.width * 0.21,
-                                    width: size.width * 0.2,
-                                    fit: BoxFit.fill,
+                                    imageBuilder: (context, imageProvider) {
+                                      return Container(
+                                        height: size.width * 0.21,
+                                        width: size.width * 0.2,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    placeholder: (context, url) => Container(
+                                      height: size.width * 0.21,
+                                      width: size.width * 0.2,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        image: const DecorationImage(
+                                          image: AssetImage(
+                                              'assets/images/placeholder.png'),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -277,31 +298,42 @@ class _FeedsScreenState extends State<FeedsScreen> {
                                   SizedBox(
                                     width: double.infinity,
                                     child: TextButton(
-                                      onPressed: cartProvider.getCartItems
-                                              .containsKey(_isSearching
+                                      onPressed: Get.find<CartController>()
+                                              .cartItems
+                                              .toString()
+                                              .contains(_isSearching
                                                   ? searchResults[index].id
                                                   : allProduct[index].id)
                                           ? null
                                           : () async {
-                                              final User? user =
-                                                  authInstance.currentUser;
-
-                                              if (user == null) {
-                                                GlobalMethods.errorDialog(
-                                                    subtitle:
-                                                        'No user found, Please login first',
-                                                    context: context);
-                                                return;
-                                              }
-                                              await GlobalMethods.addToCart(
-                                                  productId: _isSearching
-                                                      ? searchResults[index].id
-                                                      : allProduct[index].id,
-                                                  quantity: int.parse(
-                                                      _quantityTextController
-                                                          .text),
-                                                  context: context);
-                                              await cartProvider.fetchCart();
+                                              Get.find<CartController>()
+                                                  .addProductToCart(
+                                                      productId: _isSearching
+                                                          ? searchResults[index]
+                                                              .id
+                                                          : allProduct[index]
+                                                              .id,
+                                                      price: _isSearching
+                                                          ? searchResults[index]
+                                                                  .isOnSale
+                                                              ? searchResults[
+                                                                      index]
+                                                                  .salePrice
+                                                              : searchResults[
+                                                                      index]
+                                                                  .price
+                                                          : allProduct[index]
+                                                                  .isOnSale
+                                                              ? allProduct[
+                                                                      index]
+                                                                  .salePrice
+                                                              : allProduct[
+                                                                      index]
+                                                                  .price,
+                                                      quantity: int.parse(
+                                                          _quantityTextController
+                                                              .text),
+                                                      context: context);
                                             },
                                       style: ButtonStyle(
                                           backgroundColor:
@@ -318,17 +350,22 @@ class _FeedsScreenState extends State<FeedsScreen> {
                                                       bottomRight:
                                                           Radius.circular(
                                                               12.0))))),
-                                      child: TextWidget(
-                                        text: cartProvider.getCartItems
-                                                .containsKey(_isSearching
-                                                    ? searchResults[index].id
-                                                    : allProduct[index].id)
-                                            ? 'in cart'
-                                            : "Masukkan Keranjang",
-                                        maxLines: 1,
-                                        color: color,
-                                        textSize: 17,
-                                      ),
+                                      child: GetBuilder<CartController>(
+                                          builder: (controller) {
+                                        return TextWidget(
+                                          text: Get.find<CartController>()
+                                                  .cartItems
+                                                  .toString()
+                                                  .contains(_isSearching
+                                                      ? searchResults[index].id
+                                                      : allProduct[index].id)
+                                              ? 'in cart'
+                                              : "Masukkan Keranjang",
+                                          maxLines: 1,
+                                          color: color,
+                                          textSize: 17,
+                                        );
+                                      }),
                                     ),
                                   )
                                 ],
